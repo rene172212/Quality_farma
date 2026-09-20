@@ -145,14 +145,37 @@ def module_create(request, module):
 	return render(request, 'gestion/form.html', {'form': form, 'title': f'Crear {singular}', 'module': module})
 
 
+def siguiente_version(codigo):
+	versiones = Documento.objects.filter(codigo=codigo).values_list('version', flat=True)
+	versiones_numericas = [int(version) for version in versiones if str(version).isdigit()]
+	proxima = max(versiones_numericas, default=0) + 1
+	anchura = max((len(str(version)) for version in versiones if str(version).isdigit()), default=1)
+	return str(proxima).zfill(anchura)
+
+
 @requiere_permiso(None, 'editar')
 def module_edit(request, module, pk):
 	model, form_class, _, singular = MODULES[module]
 	item = get_object_or_404(model, pk=pk)
 	form = form_class(request.POST or None, request.FILES or None, instance=item)
 	if request.method == 'POST' and form.is_valid():
-		form.save()
-		messages.success(request, 'Registro actualizado correctamente.')
+		if module == 'documentos':
+			item.estado = 'Anulado'
+			item.save(update_fields=['estado'])
+			nuevo = Documento(
+				nombre=form.cleaned_data['nombre'],
+				codigo=form.cleaned_data['codigo'],
+				version=siguiente_version(form.cleaned_data['codigo']),
+				estado=form.cleaned_data['estado'],
+				subido_por_id=request.session.get('usuario_id'),
+			)
+			archivo = form.cleaned_data.get('archivo')
+			nuevo.archivo = archivo if archivo else item.archivo.name if item.archivo else None
+			nuevo.save()
+			messages.success(request, f'Nueva versión {nuevo.version} creada correctamente.')
+		else:
+			form.save()
+			messages.success(request, 'Registro actualizado correctamente.')
 		return redirect('module_list', module=module)
 	return render(request, 'gestion/form.html', {'form': form, 'title': f'Editar {singular}', 'module': module})
 

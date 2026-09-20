@@ -1,1 +1,61 @@
-{% extends 'gestion/base.html' %}{% block title %}{{ title }} - Quality Farma{% endblock %}{% block content %}<section class="panel"><div class="section-head"><div><h1>{{ title }}</h1><p>Consulta y administración de registros.</p></div><a class="button" href="{% url 'module_create' module %}">+ Crear {{ singular }}</a></div>{% if module == 'capacitaciones' %}<form class="search" method="get"><input name="consulta" value="{{ query }}" placeholder="Nombre, responsable o estado"><button type="submit">Buscar</button></form>{% endif %}<div class="table-wrap"><table><thead><tr>{% if module == 'usuarios' %}<th>Nombre</th><th>Cargo</th><th>Área</th><th>Correo</th><th>Estado</th>{% elif module == 'documentos' %}<th>Nombre</th><th>Código</th><th>Versión</th><th>Estado</th>{% elif module == 'hallazgos' %}<th>Descripción</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Fecha</th>{% elif module == 'capa' %}<th>Hallazgo</th><th>Acción</th><th>Responsable</th><th>Estado</th><th>Fecha</th>{% else %}<th>Nombre</th><th>Responsable</th><th>Participantes</th><th>Estado</th><th>Fecha</th>{% endif %}<th>Acciones</th></tr></thead><tbody>{% for item in items %}<tr>{% if module == 'usuarios' %}<td>{{ item.nombre }}</td><td>{{ item.cargo }}</td><td>{{ item.area }}</td><td>{{ item.correo }}</td><td>{% if item.estado %}Activo{% else %}Inactivo{% endif %}</td>{% elif module == 'documentos' %}<td>{{ item.nombre }}</td><td>{{ item.codigo }}</td><td>{{ item.version }}</td><td>{{ item.estado }}</td>{% elif module == 'hallazgos' %}<td>{{ item.descripcion }}</td><td>{{ item.area }}</td><td>{{ item.responsable }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>{% elif module == 'capa' %}<td>{{ item.hallazgo }}</td><td>{{ item.accion }}</td><td>{{ item.responsable }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>{% else %}<td>{{ item.nombre }}</td><td>{{ item.responsable }}</td><td>{{ item.participantes }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>{% endif %}<td><a href="{% url 'module_edit' module item.pk %}">Editar</a><form class="inline" method="post" action="{% url 'module_delete' module item.pk %}">{% csrf_token %}<button class="link-button" type="submit">Eliminar</button></form></td></tr>{% empty %}<tr><td colspan="7">No hay registros.</td></tr>{% endfor %}</tbody></table></div></section>{% endblock %}
+{% extends 'gestion/base.html' %}
+{% block title %}{{ title }} - Quality Farma{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-head">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>Consulta y administración de registros.</p>
+        </div>
+        {% if puede_crear %}<a class="button" href="{% url 'module_create' module %}">+ Crear {{ singular }}</a>{% endif %}
+    </div>
+    {% if module == 'capacitaciones' %}
+    <form class="search" method="get">
+        <input name="consulta" value="{{ query }}" placeholder="Nombre, responsable o estado">
+        <button type="submit">Buscar</button>
+    </form>
+    {% endif %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                {% if module == 'usuarios' %}
+                    <th>D</th><th>Rol</th><th>Nombre</th><th>Cargo</th><th>Correo</th><th>Estado</th><th>Fecha de activación</th><th>Fecha de desactivación</th>
+                {% elif module == 'hallazgos' %}
+                <th>Descripción</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Fecha</th>
+                {% elif module == 'capa' %}
+                <th>Hallazgo</th><th>Acción</th><th>Responsable</th><th>Estado</th><th>Fecha</th>
+                {% else %}
+                <th>Nombre</th><th>Responsable</th><th>Participantes</th><th>Estado</th><th>Fecha</th>
+                {% endif %}
+                <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+            {% for item in items %}
+            <tr>
+                {% if module == 'usuarios' %}
+                <td>{{ item.nombre }}</td><td>{{ item.cargo }}</td><td>{{ item.area }}</td><td>{{ item.correo }}</td><td>{{ item.rol }}</td><td>{% if item.estado %}Activo{% else %}Inactivo{% endif %}</td>
+                    <td>{{ item.id_usuario }}</td><td>{{ item.rol }}</td><td>{{ item.nombre }}</td><td>{{ item.cargo }}</td><td>{{ item.correo }}</td><td>{% if item.estado %}Activo{% else %}Inactivo{% endif %}</td><td>{{ item.fecha_activacion|date:'d/m/Y H:i'|default:'No registrada' }}</td><td>{{ item.fecha_desactivacion|date:'d/m/Y H:i'|default:'No registrada' }}</td>
+                {% elif module == 'hallazgos' %}
+                <td>{{ item.descripcion }}</td><td>{{ item.area }}</td><td>{{ item.responsable }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>
+                {% elif module == 'capa' %}
+                <td>{{ item.hallazgo }}</td><td>{{ item.accion }}</td><td>{{ item.responsable }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>
+                {% else %}
+                <td>{{ item.nombre }}</td><td>{{ item.responsable }}</td><td>{{ item.participantes }}</td><td>{{ item.estado }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td>
+                {% endif %}
+                <td>
+                    {% if puede_editar %}<a href="{% url 'module_edit' module item.pk %}">Editar</a>{% endif %}
+                    {% if puede_eliminar %}
+                    <form class="inline" method="post" action="{% url 'module_delete' module item.pk %}">
+                        {% csrf_token %}<button class="link-button" type="submit">Eliminar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No hay registros.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

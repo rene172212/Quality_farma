@@ -1,5 +1,6 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Usuario(models.Model):
@@ -16,6 +17,15 @@ class Usuario(models.Model):
 	contrasena_hash = models.CharField(max_length=255)
 	rol = models.CharField(max_length=80, choices=ROLES, default='Consultor')
 	estado = models.BooleanField(default=True)
+	fecha_activacion = models.DateTimeField(null=True, blank=True)
+	fecha_desactivacion = models.DateTimeField(null=True, blank=True)
+
+	def save(self, *args, **kwargs):
+		if self.estado and not self.fecha_activacion:
+			self.fecha_activacion = timezone.now()
+		if not self.estado and not self.fecha_desactivacion:
+			self.fecha_desactivacion = timezone.now()
+		super().save(*args, **kwargs)
 
 	class Meta:
 		db_table = 'usuario'

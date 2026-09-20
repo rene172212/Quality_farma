@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verificación - Quality Farma</title>
+    {% load static %}<link rel="stylesheet" href="{% static 'gestion/estilos.css' %}">
+</head>
+<body class="login-page">
+    <section class="login-box">
+        <h1>Verificación de seguridad</h1>
+        <p>Ingresa el código de 6 dígitos enviado a tu correo.</p>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Verificar código</button>
+        </form>
+    </section>
+</body>
+</html>

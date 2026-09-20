@@ -34,6 +34,23 @@ class PermisosPorRolTests(TestCase):
 		self.assertRedirects(respuesta, reverse('dashboard'))
 		self.assertTrue(Documento.objects.filter(pk=documento.pk).exists())
 
+	def test_modificar_documento_crea_nueva_version(self):
+		usuario = self.crear_usuario('Analista')
+		documento = Documento.objects.create(nombre='Manual original', codigo='DOC-1', version='01', estado='Vigente')
+		self.iniciar_sesion(usuario)
+
+		respuesta = self.client.post(reverse('module_edit', args=['documentos', documento.pk]), {
+			'nombre': 'Manual actualizado',
+			'codigo': 'DOC-1',
+			'version': '99',
+			'estado': 'Vigente',
+		})
+
+		self.assertRedirects(respuesta, reverse('module_list', args=['documentos']))
+		self.assertEqual(Documento.objects.filter(codigo='DOC-1').count(), 2)
+		self.assertTrue(Documento.objects.filter(nombre='Manual original', version='01', estado='Anulado').exists())
+		self.assertTrue(Documento.objects.filter(nombre='Manual actualizado', version='02').exists())
+
 	def test_consultor_no_puede_administrar_usuarios(self):
 		usuario = self.crear_usuario('Consultor')
 		self.iniciar_sesion(usuario)
